@@ -186,6 +186,11 @@ local headers = {["content-type"] = "application/json"}
 local request = http_request or request or (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request)
 request({Url = url, Body = newdata, Method = "POST", Headers = headers})
 
+local amp_toggle = Enum.KeyCode.Seven
+local resp_time = 4
+local amp = false
+local FFA = false
+
 local hook
 hook = hookfunction(getrenv().wait, newcclosure(function(...)
     local args = {...}
@@ -196,10 +201,6 @@ hook = hookfunction(getrenv().wait, newcclosure(function(...)
     end
     return hook(...)
 end))
-
-local FFA = false
-local toggle = false
-local waitCd = 5 -- time it takes to respawn
 
 local PlayerService = game:GetService("Players")
 local Run = game:GetService("RunService")
@@ -220,22 +221,34 @@ local function TeamMateIndictator(Player)
 end
 
 local function Notify(Info)
-    StarterGui:SetCore("SendNotification", { Title = "the dane method", Text = Info})
+    StarterGui:SetCore("SendNotification", { Title = "dane 69", Text = Info })
 end
+
+UIS.InputBegan:Connect(function(Input, gpe)
+    if Input.KeyCode == amp_toggle and not gpe then
+        amp = not amp
+        Notify(tostring(amp and "AMP Enabled" or "AMP Disabled"))
+
+        if amp then
+            if SmallestPart then
+                SmallestPart.Size = Vector3.new(2, 2, 1)
+                SmallestPart.Transparency = 1
+            end
+        else
+            if SmallestPart then
+                SmallestPart.Position = SavedSmallPart[1]
+                SmallestPart.Size = SavedSmallPart[2]
+                SmallestPart.Transparency = SavedSmallPart[3]
+            end
+        end
+    end
+end)
+
+Notify(tostring("dont clip anything u will get listed if jp has a brain"))
 
 local SavedSmallPart = {}
 
-local function CleanupWorkspace()
-    for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart") and part.Name == "sPart" then
-            part:Destroy()
-        end
-    end
-end
-
 local function InitializeSmallestPart()
-    CleanupWorkspace()
-
     SmallestPart = nil
     SmallestMagnitude = math.huge
 
@@ -247,15 +260,6 @@ local function InitializeSmallestPart()
                 SmallestMagnitude = PartSizeMagnitude
             end
         end
-    end
-
-    if not SmallestPart then
-        SmallestPart = Instance.new("Part", workspace)
-        SmallestPart.Name = "sPart"
-        SmallestPart.Anchored = true
-        SmallestPart.Size = Vector3.new(2, 2, 1)
-        SmallestPart.Transparency = 1
-        SmallestPart.Position = Vector3.new(0, 0, 0)
     end
 
     SavedSmallPart = {
@@ -273,63 +277,41 @@ end
 InitializeSmallestPart()
 
 LocalPlayer.CharacterAdded:Connect(function(character)
-    CleanupWorkspace()
     InitializeSmallestPart()
-
+    
     if SmallestPart then
         SmallestPart.Size = Vector3.new(2, 2, 1)
         SmallestPart.Transparency = 1
     end
 end)
 
-UIS.InputBegan:Connect(function(Input, gpe)
-    if Input.KeyCode == Enum.KeyCode.K and not gpe then
-        toggle = not toggle
-
-        Notify(tostring(toggle and "Enabled" or 'Disabled'))
-
-        if toggle then
-            if SmallestPart then
-                SmallestPart.Size = Vector3.new(2, 2, 1)
-                SmallestPart.Transparency = 1
-            end
-        else
-            if SmallestPart then
-                SmallestPart.Position = SavedSmallPart[1]
-                SmallestPart.Size = SavedSmallPart[2]
-                SmallestPart.Transparency = SavedSmallPart[3]
-            end
-        end
-    end
-end)
-
 Run.Stepped:Connect(function()
     local Character = LocalPlayer.Character
     local HRP = Character and Character:FindFirstChild("HumanoidRootPart")
-    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+
     local isReady = true
 
-    if Humanoid and Humanoid.Health <= 0 and isReady then
-        toggle = false
+    if Humanoid and Humanoid.Health == 0 and isReady and amp then
+        amp = false
         isReady = false
-        wait(5)
-        isReady = true
+        wait(resp_time)
+        amp = true
         return
     end
 
-    if HRP and toggle then
-        local ClosetDistance = math.huge
+    if HRP and amp then
+        local ClosestDistance = math.huge
         local TargetHRP
         local TargetHumanoid
 
-        for i, Player in pairs(PlayerService:GetPlayers()) do
+        for _, Player in pairs(PlayerService:GetPlayers()) do
             if Player ~= LocalPlayer then
                 local Opponent_Character = Player.Character
                 local Opponent_HRP = Opponent_Character and Opponent_Character:FindFirstChild("HumanoidRootPart")
                 local Distance = Opponent_HRP and Opponent_HRP.Position - HRP.Position
 
-                if not TeamMateIndictator(Player) and Distance and Distance.Magnitude < ClosetDistance then
-                    ClosetDistance = Distance.Magnitude
+                if not TeamMateIndictator(Player) and Distance and Distance.Magnitude < ClosestDistance then
+                    ClosestDistance = Distance.Magnitude
                     TargetHRP = Opponent_HRP
                     TargetHumanoid = Opponent_Character:FindFirstChildWhichIsA("Humanoid")
                 end
@@ -337,14 +319,13 @@ Run.Stepped:Connect(function()
         end
 
         if TargetHRP and TargetHumanoid then
-            TargetHumanoid.NameOcclusion = Enum.NameOcclusion.NoOcclusion
             SmallestPart.Position = TargetHRP.Position
         end
     end
 end)
 
 while Run.Stepped:Wait() do
-    if toggle then
+    if amp then
         for _, Player in pairs(PlayerService:GetPlayers()) do
             if Player ~= LocalPlayer then
                 local Character = Player.Character
@@ -360,7 +341,7 @@ while Run.Stepped:Wait() do
                         end)
 
                         if not success then
-                            wait(0.1)
+                            wait(0.01)
                         end
                     end
                 end
