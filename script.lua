@@ -304,16 +304,24 @@ Run.Stepped:Connect(function()
         local TargetHRP
         local TargetHumanoid
 
-        for _, Player in pairs(PlayerService:GetPlayers()) do
+        for i, Player in pairs(PlayerService:GetPlayers()) do
             if Player ~= LocalPlayer then
-                local Opponent_Character = Player.Character
-                local Opponent_HRP = Opponent_Character and Opponent_Character:FindFirstChild("HumanoidRootPart")
-                local Distance = Opponent_HRP and Opponent_HRP.Position - HRP.Position
+                if Player.Team.AutoAssignable ~= true then
+                    local Opponent_Character = Player.Character
+                    local Opponent_Torso = Player.Character:FindFirstChild("Torso")
+                    if Opponent_Torso.Transparency > 0.9 then
+                        local Opponent_HRP = Opponent_Character and Opponent_Character:FindFirstChild("HumanoidRootPart")
+                        if Opponent_HRP.Health < 200 then
 
-                if not TeamMateIndictator(Player) and Distance and Distance.Magnitude < ClosestDistance then
-                    ClosestDistance = Distance.Magnitude
-                    TargetHRP = Opponent_HRP
-                    TargetHumanoid = Opponent_Character:FindFirstChildWhichIsA("Humanoid")
+                            local Distance = Opponent_HRP and Opponent_HRP.Position - HRP.Position
+
+                            if not TeamMateIndictator(Player) and Distance and Distance.Magnitude < ClosetDistance then
+                                ClosetDistance = Distance.Magnitude
+                                TargetHRP = Opponent_HRP
+                                TargetHumanoid = Opponent_Character:FindFirstChildWhichIsA("Humanoid")
+                            end
+                        end
+                    end
                 end
             end
         end
