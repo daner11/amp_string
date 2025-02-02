@@ -349,7 +349,7 @@ while Run.Stepped:Wait() do
                         end)
 
                         if not success then
-                            wait(0.01)
+                            task.wait()
                         end
                     end
                 end
