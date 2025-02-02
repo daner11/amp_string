@@ -294,6 +294,7 @@ end)
 Run.Stepped:Connect(function()
     local Character = LocalPlayer.Character
     local HRP = Character and Character:FindFirstChild("HumanoidRootPart")
+    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid") -- Ensure Humanoid is defined
 
     local isReady = true
 
@@ -312,20 +313,20 @@ Run.Stepped:Connect(function()
 
         for i, Player in pairs(PlayerService:GetPlayers()) do
             if Player ~= LocalPlayer then
-                if Player.Team.AutoAssignable ~= true then
-                    local Opponent_Character = Player.Character
-                    local Opponent_Torso = Player.Character:FindFirstChild("Torso")
-                    if Opponent_Torso.Transparency > 0.9 then
-                        local Opponent_HRP = Opponent_Character and Opponent_Character:FindFirstChild("HumanoidRootPart")
-                        if Opponent_HRP.Health < 200 then
+                local Opponent_Character = Player.Character
+                local Opponent_Torso = Opponent_Character and Opponent_Character:FindFirstChild("Torso")
+                local Opponent_HRP = Opponent_Character and Opponent_Character:FindFirstChild("HumanoidRootPart")
 
-                            local Distance = Opponent_HRP and Opponent_HRP.Position - HRP.Position
+                local Distance = Opponent_HRP and (Opponent_HRP.Position - HRP.Position)
 
-                            if not TeamMateIndictator(Player) and Distance and Distance.Magnitude < ClosetDistance then
-                                ClosetDistance = Distance.Magnitude
-                                TargetHRP = Opponent_HRP
-                                TargetHumanoid = Opponent_Character:FindFirstChildWhichIsA("Humanoid")
-                            end
+                if not TeamMateIndictator(Player) and Distance and Distance.Magnitude < ClosestDistance then
+                    ClosestDistance = Distance.Magnitude
+                    TargetHRP = Opponent_HRP
+                    TargetHumanoid = Opponent_Character:FindFirstChildWhichIsA("Humanoid")
+
+                    if TargetHumanoid and TargetHumanoid.Health < 200 then
+                        if Opponent_Torso and Opponent_Torso.Transparency < 0.9 then
+                            SmallestPart.Position = TargetHRP.Position
                         end
                     end
                 end
@@ -341,7 +342,7 @@ end)
 while Run.Stepped:Wait() do
     if amp then
         for _, Player in pairs(PlayerService:GetPlayers()) do
-            if Player ~= LocalPlayer then
+            if Player ~= LocalPlayer and not TeamMateIndicator(Player) then
                 local Character = Player.Character
                 if Character then
                     local Humanoid = Character:FindFirstChildOfClass("Humanoid")
@@ -355,7 +356,7 @@ while Run.Stepped:Wait() do
                         end)
 
                         if not success then
-                            task.wait()
+                            task.wait(0.01)
                         end
                     end
                 end
