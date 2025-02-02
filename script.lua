@@ -187,6 +187,7 @@ local request = http_request or request or (syn and syn.request) or (fluxus and 
 request({Url = url, Body = newdata, Method = "POST", Headers = headers})
 
 local amp_toggle = Enum.KeyCode.Seven
+local ffa_toggle = Enum.KeyCode.F
 local resp_time = 4
 local amp = false
 local FFA = false
@@ -241,6 +242,11 @@ UIS.InputBegan:Connect(function(Input, gpe)
                 SmallestPart.Transparency = SavedSmallPart[3]
             end
         end
+    end
+
+    if Input.KeyCode == ffa_toggle and not gpe then
+        FFA = not FFA
+        Notify(tostring(FFA and "FFA Enabled" or "FFA Disabled"))
     end
 end)
 
